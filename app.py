@@ -43,12 +43,14 @@ def extract():
                 }]
             }
         )
+        response.raise_for_status()
         result = response.json()
         text = result['content'][0]['text'].replace('```json','').replace('```','').strip()
         parsed = json.loads(text)
         return jsonify(parsed)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    import traceback
+    return jsonify({'error': str(e), 'trace': traceback.format_exc()}), 500
 
 @app.route('/queue', methods=['POST'])
 def queue_job():
