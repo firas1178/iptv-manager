@@ -1,12 +1,9 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-import subprocess
-import sys
 import os
-import base64
 import json
 import requests
-import threading
+import traceback
 
 app = Flask(__name__, static_folder='static')
 CORS(app)
@@ -32,8 +29,8 @@ def extract():
                 'anthropic-version': '2023-06-01'
             },
             json={
-'model': 'claude-haiku-4-5-20251001',
-'max_tokens': 150,                'max_tokens': 150,
+                'model': 'claude-haiku-4-5-20251001',
+                'max_tokens': 150,
                 'messages': [{
                     'role': 'user',
                     'content': [
@@ -41,16 +38,15 @@ def extract():
                         {'type': 'text', 'text': 'Extract TV MAC and Device Key from this image. Reply ONLY as JSON: {"mac":"xx:xx:xx:xx:xx:xx","key":"xxxxxx"}'}
                     ]
                 }]
-            }
+            },
+            timeout=30
         )
-        response.raise_for_status()
         result = response.json()
         text = result['content'][0]['text'].replace('```json','').replace('```','').strip()
         parsed = json.loads(text)
         return jsonify(parsed)
     except Exception as e:
-    import traceback
-    return jsonify({'error': str(e), 'trace': traceback.format_exc()}), 500
+        return jsonify({'error': str(e), 'trace': traceback.format_exc()}), 500
 
 @app.route('/queue', methods=['POST'])
 def queue_job():
