@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+jobs.json
+worker.py
+start_worker.bat
