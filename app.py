@@ -17,9 +17,15 @@ def index():
 @app.route('/extract', methods=['POST'])
 def extract():
     try:
+        if not ANTHROPIC_API_KEY:
+            print("ERROR: ANTHROPIC_API_KEY is missing!")
+            return jsonify({'error': 'API key not configured'}), 500
+
         data = request.json
         image_b64 = data.get('image')
         media_type = data.get('media_type', 'image/jpeg')
+
+        print(f"Calling Anthropic API... key starts with: {ANTHROPIC_API_KEY[:10]}")
 
         response = requests.post(
             'https://api.anthropic.com/v1/messages',
@@ -41,14 +47,21 @@ def extract():
             },
             timeout=30
         )
+
+        print(f"API response status: {response.status_code}")
         result = response.json()
+        print(f"API response: {json.dumps(result)[:300]}")
+
+        if 'error' in result:
+            return jsonify({'error': result['error'].get('message', 'API error')}), 500
+
         text = result['content'][0]['text'].replace('```json','').replace('```','').strip()
         parsed = json.loads(text)
         return jsonify(parsed)
+
     except Exception as e:
-    import traceback
-    traceback.print_exc()
-    return jsonify({'error': str(e)}), 500
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/queue', methods=['POST'])
 def queue_job():
@@ -72,6 +85,7 @@ def queue_job():
 
         return jsonify({'status': 'queued', 'total': len(jobs)})
     except Exception as e:
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/jobs', methods=['GET'])
