@@ -46,7 +46,9 @@ def extract():
         parsed = json.loads(text)
         return jsonify(parsed)
     except Exception as e:
-        return jsonify({'error': str(e), 'trace': traceback.format_exc()}), 500
+    import traceback
+    traceback.print_exc()
+    return jsonify({'error': str(e)}), 500
 
 @app.route('/queue', methods=['POST'])
 def queue_job():
